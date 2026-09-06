@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Axis Robotics — The Basics Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Orbitron:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#020607;
+    --panel:#050b0d;
+    --panel-raised:#08161a;
+    --line:#12300f;
+    --line-bright:#1f6b12;
+    --text:#e8fbfd;
+    --text-dim:#5f8b91;
+    --cyan:#39ff14;
+    --cyan-soft:#8cff5c;
+    --cyan-dim:#0d3308;
+    --bad:#ff5c5c;
+    --good:#33e08f;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Space Grotesk', sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:32px 20px 80px;
+    position:relative;
+    overflow-x:hidden;
+  }
+
+  #bgFx{
+    position:fixed;
+    inset:0;
+    z-index:-2;
+    overflow:hidden;
+    background:
+      linear-gradient(rgba(57,255,20,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(57,255,20,0.05) 1px, transparent 1px),
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(57,255,20,0.16), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 90% 100%, rgba(120,60,255,0.10), transparent 60%),
+      var(--bg);
+    background-size:46px 46px, 46px 46px, cover, cover, cover;
+  }
+  #bgFx .blob{
+    position:absolute;
+    border-radius:50%;
+    filter:blur(70px);
+    opacity:0.55;
+    mix-blend-mode:screen;
+  }
+  #bgFx .blob1{
+    width:420px; height:420px;
+    top:-120px; left:-100px;
+    background:radial-gradient(circle, rgba(57,255,20,0.5), transparent 70%);
+    animation:driftA 26s ease-in-out infinite;
+  }
+  #bgFx .blob2{
+    width:360px; height:360px;
+    bottom:-140px; right:-80px;
+    background:radial-gradient(circle, rgba(90,60,255,0.4), transparent 70%);
+    animation:driftB 32s ease-in-out infinite;
+  }
+  #bgFx .blob3{
+    width:260px; height:260px;
+    top:40%; right:10%;
+    background:radial-gradient(circle, rgba(51,224,143,0.28), transparent 70%);
+    animation:driftC 22s ease-in-out infinite;
+  }
+  #bgFx .scan{
+    position:absolute;
+    left:0; right:0;
+    height:2px;
+    background:linear-gradient(90deg, transparent, rgba(57,255,20,0.55), transparent);
+    animation:scan 9s linear infinite;
+  }
+
+  @keyframes driftA{
+    0%,100%{ transform:translate(0,0) scale(1); }
+    50%{ transform:translate(60px,40px) scale(1.12); }
+  }
+  @keyframes driftB{
+    0%,100%{ transform:translate(0,0) scale(1); }
+    50%{ transform:translate(-50px,-30px) scale(1.08); }
+  }
+  @keyframes driftC{
+    0%,100%{ transform:translate(0,0) scale(1); }
+    50%{ transform:translate(-30px,50px) scale(0.9); }
+  }
+  @keyframes scan{
+    0%{ top:-2px; }
+    100%{ top:100%; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    #bgFx .blob, #bgFx .scan{animation:none;}
+  }
+
+  .mono{font-family:'IBM Plex Mono', monospace;}
+  .brand{font-family:'Orbitron', sans-serif; text-transform:uppercase; letter-spacing:0.03em;}
+
+  header{
+    width:100%;
+    max-width:720px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:36px;
+    padding-bottom:16px;
+    border-bottom:1px solid var(--line-bright);
+  }
+  header .mark{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  header .mark svg, header .mark img{display:block; filter:drop-shadow(0 0 6px rgba(57,255,20,0.8));}
+  header h1{
+    font-size:19px;
+    font-weight:700;
+    margin:0;
+    letter-spacing:0.03em;
+    color:var(--text);
+    font-family:'Orbitron', sans-serif;
+    text-transform:uppercase;
+  }
+  header .tag{
+    font-size:12px;
+    color:var(--text-dim);
+    font-family:'IBM Plex Mono', monospace;
+  }
+  header .handleBadge{
+    display:none;
+    align-items:center;
+    gap:6px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--cyan-soft);
+    border:1px solid var(--line-bright);
+    padding:5px 10px;
+    background:var(--panel-raised);
+  }
+  header .handleBadge .dot{
+    width:6px; height:6px; border-radius:50%;
+    background:var(--good);
+    box-shadow:0 0 6px var(--good);
+  }
+
+  main{
+    width:100%;
+    max-width:720px;
+  }
+
+  /* ---- panel base with glow ---- */
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line-bright);
+    border-radius:20px;
+    box-shadow:0 0 0 1px rgba(57,255,20,0.05), 0 0 40px rgba(57,255,20,0.07), inset 0 0 60px rgba(57,255,20,0.03);
+    position:relative;
+  }
+  .panel::before{
+    content:"";
+    position:absolute;
+    top:-1px; left:-1px;
+    width:12px; height:12px;
+    border-top:2px solid var(--cyan);
+    border-left:2px solid var(--cyan);
+    border-top-left-radius:20px;
+    filter:drop-shadow(0 0 4px var(--cyan));
+  }
+  .panel::after{
+    content:"";
+    position:absolute;
+    bottom:-1px; right:-1px;
+    width:12px; height:12px;
+    border-bottom:2px solid var(--cyan);
+    border-right:2px solid var(--cyan);
+    border-bottom-right-radius:20px;
+    filter:drop-shadow(0 0 4px var(--cyan));
+  }
+
+  /* ---- Intro screen ---- */
+  #intro{
+    padding:40px 36px;
+  }
+  #intro h2{
+    font-size:26px;
+    line-height:1.25;
+    margin:0 0 12px;
+    font-weight:700;
+    text-align:center;
+    letter-spacing:0.02em;
+    font-family:'Orbitron', sans-serif;
+    text-transform:uppercase;
+  }
+  #intro p{
+    color:var(--text-dim);
+    font-size:14px;
+    line-height:1.6;
+    max-width:440px;
+    margin:0 auto 26px;
+    text-align:center;
+  }
+  .eyebrow{
+    text-align:center;
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:0.14em;
+    color:var(--text);
+    margin:0 0 6px;
+    font-family:'Orbitron', sans-serif;
+    text-transform:uppercase;
+  }
+  .eyebrow .cy{color:var(--cyan);}
+
+  /* ---- Logo frame (hero card + wings) ---- */
+  .logoFrame{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:0;
+    margin:0 0 30px;
+    height:150px;
+  }
+  .wing{
+    flex:1;
+    height:140px;
+    min-width:40px;
+  }
+  .logoCard{
+    flex:0 0 auto;
+    width:min(70%, 420px);
+    background:#000;
+    border:1px solid var(--line-bright);
+    border-radius:14px;
+    box-shadow:0 0 24px rgba(57,255,20,0.18), inset 0 0 30px rgba(57,255,20,0.05);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:22px 20px;
+    gap:8px;
+  }
+  .logoCard svg, .logoCard img{filter:drop-shadow(0 0 6px rgba(255,255,255,0.5));}
+  .logoText{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    line-height:1.05;
+    margin-top:6px;
+  }
+  .logoLine{
+    font-size:22px;
+    font-weight:700;
+    letter-spacing:0.04em;
+    color:var(--text);
+    font-family:'Orbitron', sans-serif;
+    text-transform:uppercase;
+  }
+  .logoTagline{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:9.5px;
+    letter-spacing:0.18em;
+    color:var(--text-dim);
+    margin-top:8px;
+  }
+
+  button.wide{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    width:100%;
+    margin-bottom:10px;
+  }
+  button.primary .arrow{transition:transform 0.15s ease;}
+  button.primary.wide:hover .arrow{transform:translateX(3px);}
+  button.ghost .gear{opacity:0.8;}
+  #adminNote{
+    display:block;
+    text-align:center;
+    font-size:11px;
+    color:var(--text-dim);
+    min-height:14px;
+    margin-top:4px;
+    opacity:0;
+    transition:opacity 0.25s ease;
+  }
+  #adminNote.show{opacity:1;}
+  button.primary{
+    background:linear-gradient(90deg, var(--cyan), #1fae10);
+    color:#01161c;
+    border:none;
+    border-radius:14px;
+    font-family:'Orbitron', sans-serif;
+    text-transform:uppercase;
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:0.03em;
+    padding:16px 26px;
+    cursor:pointer;
+    transition:filter 0.15s ease, box-shadow 0.15s ease;
+    box-shadow:0 0 18px rgba(57,255,20,0.45);
+  }
+  button.primary:hover{filter:brightness(1.08); box-shadow:0 0 26px rgba(57,255,20,0.7);}
+  button.primary:disabled{opacity:0.4; cursor:default; box-shadow:none;}
+  button.ghost{
+    background:var(--panel-raised);
+    color:var(--text);
+    border:1px solid var(--line-bright);
+    border-radius:14px;
+    font-family:'Orbitron', sans-serif;
+    text-transform:uppercase;
+    font-weight:600;
+    font-size:14px;
+    letter-spacing:0.03em;
+    padding:16px 26px;
+    cursor:pointer;
+    transition:border-color 0.15s ease, color 0.15s ease;
+  }
+  button.ghost:hover{border-color:var(--cyan); color:var(--cyan);}
+
+  /* ---- Progress / timer readout ---- */
+  #progressWrap{
+    display:none;
+    align-items:center;
+    gap:16px;
+    margin-bottom:14px;
+  }
+  #progressWrap .readout{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    color:var(--text-dim);
+    white-space:nowrap;
+  }
+  #progressWrap .readout b{color:var(--cyan); font-weight:600;}
+  .track{
+    flex:1;
+    height:2px;
+    background:var(--line-bright);
+    position:relative;
+  }
+  .track .fill{
+    position:absolute; left:0; top:0; bottom:0;
+    background:var(--cyan);
+    width:0%;
+    transition:width 0.35s ease;
+    box-shadow:0 0 8px rgba(57,255,20,0.7);
+  }
+  .track .fill::after{
+    content:"";
+    position:absolute;
+    right:-3px; top:-3px;
+    width:8px; height:8px;
+    background:var(--cyan);
+    transform:rotate(45deg);
+  }
+
+  #timerRow{
+    display:none;
+    align-items:center;
+    gap:12px;
+    margin-bottom:22px;
+  }
+  #timerRow .timerLabel{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--text-dim);
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+  .timerTrack{
+    flex:1;
+    height:6px;
+    background:var(--panel-raised);
+    border:1px solid var(--line-bright);
+    position:relative;
+    overflow:hidden;
+  }
+  .timerTrack .timerFill{
+    position:absolute; left:0; top:0; bottom:0;
+    background:var(--cyan);
+    width:100%;
+    box-shadow:0 0 10px rgba(57,255,20,0.8);
+    transition:width 1s linear, background 0.3s ease;
+  }
+  .timerTrack .timerFill.warn{background:#ffb020; box-shadow:0 0 10px rgba(255,176,32,0.7);}
+  .timerTrack .timerFill.crit{background:var(--bad); box-shadow:0 0 10px rgba(255,92,92,0.8);}
+  #timerNum{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:14px;
+    font-weight:600;
+    color:var(--cyan);
+    width:44px;
+    text-align:right;
+  }
+
+  /* ---- Question card ---- */
+  #quizCard{
+    display:none;
+    padding:34px 34px 26px;
+  }
+  .qid{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--cyan-soft);
+    letter-spacing:0.06em;
+    margin-bottom:10px;
+  }
+  .prompt{
+    font-size:21px;
+    font-weight:600;
+    line-height:1.4;
+    margin:0 0 26px;
+  }
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  .opt{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    text-align:left;
+    background:var(--panel-raised);
+    border:1px solid var(--line-bright);
+    color:var(--text);
+    font-family:'Space Grotesk', sans-serif;
+    font-size:15px;
+    padding:14px 16px;
+    cursor:pointer;
+    transition:border-color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+  }
+  .opt:hover:not(:disabled){border-color:var(--cyan); box-shadow:0 0 14px rgba(57,255,20,0.25);}
+  .opt .k{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--text-dim);
+    border:1px solid var(--line-bright);
+    width:22px; height:22px;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .opt:disabled{cursor:default;}
+  .opt.correct{border-color:var(--good); background:#062018; box-shadow:0 0 14px rgba(51,224,143,0.3);}
+  .opt.correct .k{border-color:var(--good); color:var(--good);}
+  .opt.incorrect{border-color:var(--bad); background:#210b0b; box-shadow:0 0 14px rgba(255,92,92,0.3);}
+  .opt.incorrect .k{border-color:var(--bad); color:var(--bad);}
+  .opt.dim{opacity:0.4;}
+
+  #feedback{
+    display:none;
+    margin-top:18px;
+    padding:16px 18px;
+    border-left:2px solid var(--cyan);
+    background:var(--panel-raised);
+    font-size:14px;
+    line-height:1.55;
+    color:var(--text-dim);
+  }
+  #feedback .verdict{
+    display:block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.05em;
+    margin-bottom:6px;
+    text-transform:uppercase;
+  }
+  #feedback.good{border-color:var(--good);}
+  #feedback.good .verdict{color:var(--good);}
+  #feedback.bad{border-color:var(--bad);}
+  #feedback.bad .verdict{color:var(--bad);}
+
+  #nextRow{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:22px;
+  }
+
+  /* ---- Results screen ---- */
+  #results{
+    display:none;
+    padding:0;
+    background:transparent;
+    border:none;
+    box-shadow:none;
+  }
+  #results::before, #results::after{display:none;}
+
+  .evalCard{
+    position:relative;
+    background:#04090b;
+    border:2px solid var(--cyan);
+    border-radius:18px;
+    box-shadow:0 0 0 1px rgba(57,255,20,0.15), 0 0 40px rgba(57,255,20,0.28), inset 0 0 50px rgba(57,255,20,0.04);
+    padding:26px 24px 22px;
+    margin-bottom:22px;
+    overflow:hidden;
+    background-image:
+      repeating-linear-gradient(45deg, rgba(57,255,20,0.05) 0px, rgba(57,255,20,0.05) 1px, transparent 1px, transparent 26px),
+      repeating-linear-gradient(-45deg, rgba(57,255,20,0.05) 0px, rgba(57,255,20,0.05) 1px, transparent 1px, transparent 26px);
+  }
+  .evalCard .cardBrand{
+    font-family:'Orbitron', sans-serif;
+    text-transform:uppercase;
+    font-size:19px;
+    font-weight:700;
+    letter-spacing:0.02em;
+    color:var(--text);
+    margin:0 0 4px;
+  }
+  .evalCard .cardBrand span{color:var(--cyan);}
+  .evalCard .cardSubtitle{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.14em;
+    color:var(--text-dim);
+    text-transform:uppercase;
+    margin:0 0 20px;
+  }
+  .handlePill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    border:1px solid var(--line-bright);
+    border-radius:10px;
+    background:rgba(57,255,20,0.05);
+    padding:8px 14px;
+    margin-bottom:22px;
+  }
+  .handlePill .xmark{font-size:14px; color:var(--text); font-weight:700;}
+  .handlePill span.h{
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--cyan-soft);
+    font-size:14px;
+  }
+  .scoreRow{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    margin-bottom:16px;
+  }
+  .scoreBig{
+    display:flex;
+    align-items:baseline;
+    gap:4px;
+  }
+  .scoreBig .num{
+    font-family:'Orbitron', sans-serif;
+    font-weight:800;
+    font-size:58px;
+    color:var(--text);
+    line-height:1;
+  }
+  .scoreBig .den{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:20px;
+    color:var(--text-dim);
+  }
+  .watermark{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    opacity:0.4;
+  }
+  .watermark svg{flex-shrink:0;}
+  .watermark .wmText{
+    font-family:'Orbitron', sans-serif;
+    text-transform:uppercase;
+    font-weight:700;
+    font-size:15px;
+    line-height:1.15;
+    color:#7a8a90;
+  }
+  .watermark .wmTag{
+    display:block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:8px;
+    letter-spacing:0.14em;
+    color:#5a6a70;
+    margin-top:4px;
+    text-transform:uppercase;
+  }
+  .scorePill{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size:12px;
+    letter-spacing:0.04em;
+    color:var(--good);
+    background:rgba(51,224,143,0.12);
+    border:1px solid rgba(51,224,143,0.4);
+    border-radius:8px;
+    padding:6px 12px;
+    margin-bottom:20px;
+  }
+  .verdictQuote{
+    font-size:17px;
+    font-weight:600;
+    color:var(--text);
+    margin:0 0 18px;
+  }
+  .resultId{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.08em;
+    color:var(--text-dim);
+    text-transform:uppercase;
+    margin:0;
+  }
+  .btnIcon{display:inline-flex; align-items:center;}
+
+  footer{
+    margin-top:40px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--text-dim);
+    letter-spacing:0.03em;
+  }
+
+  @media (max-width:560px){
+    #intro, #quizCard{padding:26px 20px;}
+    .evalCard{padding:20px 16px 18px;}
+    #intro h2{font-size:23px;}
+    .prompt{font-size:18px;}
+    .logoFrame{height:120px;}
+    .wing{min-width:22px;}
+    .logoCard{width:80%; padding:16px 14px;}
+    .logoLine{font-size:18px;}
+    .loginBadge{padding:14px 18px; gap:12px;}
+    .loginStar{width:34px; height:34px;}
+    .loginWordmark span{font-size:16px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .track .fill, .timerTrack .timerFill{transition:none;}
+  }
+
+  /* ---- Login screen ---- */
+  #login{
+    padding:40px 36px;
+  }
+  .loginBadgeWrap{
+    display:flex;
+    justify-content:center;
+    margin:0 0 30px;
+  }
+  .loginBadge{
+    display:inline-flex;
+    align-items:center;
+    gap:16px;
+    background:#000;
+    border-radius:16px;
+    border:1px solid var(--line-bright);
+    box-shadow:0 0 22px rgba(57,255,20,0.14), inset 0 0 24px rgba(57,255,20,0.04);
+    padding:18px 28px;
+    max-width:100%;
+  }
+  .loginStar{flex-shrink:0; filter:drop-shadow(0 0 5px rgba(255,255,255,0.4));}
+  .loginWordmark{
+    display:flex;
+    flex-direction:column;
+    line-height:1.02;
+  }
+  .loginWordmark span{
+    font-family:'Orbitron', sans-serif;
+    font-weight:700;
+    font-size:20px;
+    letter-spacing:0.02em;
+    color:#fff;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+  #login h2{
+    font-size:24px;
+    line-height:1.25;
+    margin:0 0 10px;
+    font-weight:700;
+    max-width:480px;
+    font-family:'Orbitron', sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.02em;
+  }
+  #login p{
+    color:var(--text-dim);
+    font-size:14px;
+    line-height:1.6;
+    max-width:440px;
+    margin:0 0 26px;
+  }
+  .handleField{
+    display:flex;
+    align-items:center;
+    border:1px solid var(--line-bright);
+    border-radius:12px;
+    background:var(--panel-raised);
+    margin-bottom:10px;
+    max-width:360px;
+    transition:border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .handleField:focus-within{
+    border-color:var(--cyan);
+    box-shadow:0 0 14px rgba(57,255,20,0.3);
+  }
+  .handleField .at{
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--cyan);
+    font-size:16px;
+    padding:0 4px 0 14px;
+  }
+  .handleField input{
+    flex:1;
+    background:transparent;
+    border:none;
+    outline:none;
+    color:var(--text);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:15px;
+    padding:13px 14px 13px 4px;
+  }
+  .handleField input::placeholder{color:var(--text-dim);}
+  #loginError{
+    display:none;
+    color:var(--bad);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    margin:-2px 0 20px;
+  }
+  #loginBtn{margin-top:12px;}
+</style>
+</head>
+<body>
+<div id="bgFx">
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="blob blob3"></div>
+  <div class="scan"></div>
+</div>
+
+
+<header>
+  <div class="mark">
+    <img src="data:image/png;base64,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" width="22" height="22" alt="Axis Robotics" style="display:block;">
+    <h1>Axis Robotics</h1>
+  </div>
+  <span class="tag mono" id="headerTag">the&nbsp;basics&nbsp;quiz</span>
+  <span class="handleBadge mono" id="handleBadge"><span class="dot"></span><span id="handleBadgeText"></span></span>
+</header>
+
+<main>
+
+  <section id="login" class="panel">
+    <div class="loginBadgeWrap">
+      <div class="loginBadge">
+        <img class="loginStar" src="data:image/png;base64,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" width="42" height="42" alt="">
+        <div class="loginWordmark">
+          <span>AXIS</span>
+          <span>ROBOTICS</span>
+        </div>
+      </div>
+    </div>
+    <h2>Sign in to start</h2>
+    <p>Enter your X (Twitter) handle to begin the Axis Robotics quiz.</p>
+    <div class="handleField">
+      <span class="at">@</span>
+      <input type="text" id="handleInput" placeholder="yourhandle" autocomplete="off">
+    </div>
+    <span id="loginError" class="mono">Enter a valid handle to continue.</span>
+    <br>
+    <button class="primary" id="loginBtn">Login</button>
+  </section>
+
+  <section id="intro" class="panel" style="display:none;">
+    <div class="logoFrame">
+      <svg class="wing wingLeft" viewBox="0 0 200 140" preserveAspectRatio="none">
+        <polyline points="0,8 165,36 165,104 0,132" fill="none" stroke="#39ff14" stroke-width="1.4" opacity="0.55"/>
+      </svg>
+      <div class="logoCard">
+        <img src="data:image/png;base64,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" width="34" height="34" alt="">
+        <div class="logoText">
+          <span class="logoLine">AXIS</span>
+          <span class="logoLine">ROBOTICS</span>
+        </div>
+        <span class="logoTagline">THE FUTURE IS ROBOTICS</span>
+      </div>
+      <svg class="wing wingRight" viewBox="0 0 200 140" preserveAspectRatio="none">
+        <polyline points="200,8 35,36 35,104 200,132" fill="none" stroke="#39ff14" stroke-width="1.4" opacity="0.55"/>
+      </svg>
+    </div>
+
+    <p class="eyebrow mono">AXIS <span class="cy">ROBOTICS</span></p>
+    <h2>The Basics Quiz</h2>
+    <p>Test your knowledge on physical AI, data pipelines, and the platform behind Axis Robotics. <span style="color:var(--cyan-soft); font-weight:600;">30 seconds per question.</span></p>
+
+    <button class="primary wide" id="startBtn">Start quiz <span class="arrow">→</span></button>
+    <button class="ghost wide" id="adminBtn"><span class="gear">⚙</span> Admin portal</button>
+    <span id="adminNote" class="mono"></span>
+  </section>
+
+  <div id="progressWrap">
+    <span class="readout mono">Q&nbsp;<b id="qNum">01</b>&nbsp;/&nbsp;20</span>
+    <div class="track"><div class="fill" id="fillBar"></div></div>
+    <span class="readout mono" id="scoreReadout">SCORE&nbsp;<b>0</b></span>
+  </div>
+
+  <div id="timerRow">
+    <span class="timerLabel">Time left</span>
+    <div class="timerTrack"><div class="timerFill" id="timerFill"></div></div>
+    <span id="timerNum" class="mono">30s</span>
+  </div>
+
+  <section id="quizCard" class="panel">
+    <div class="qid mono" id="qTag">SECTION — PLATFORM</div>
+    <p class="prompt" id="qPrompt"></p>
+    <div class="options" id="optionsWrap"></div>
+    <div id="feedback">
+      <span class="verdict" id="verdictText"></span>
+      <span id="explanationText"></span>
+    </div>
+    <div id="nextRow">
+      <button class="primary" id="nextBtn" disabled>Next question</button>
+    </div>
+  </section>
+
+  <section id="results">
+    <div class="evalCard" id="evalCard">
+      <p class="cardBrand">AXIS <span>ROBOTICS</span></p>
+      <p class="cardSubtitle">Community Evaluation Card</p>
+
+      <div class="handlePill">
+        <span class="xmark">𝕏</span>
+        <span class="h" id="cardHandle">@handle</span>
+      </div>
+
+      <div class="scoreRow">
+        <div class="scoreBig">
+          <span class="num" id="cardScore">0</span>
+          <span class="den">/20</span>
+        </div>
+        <div class="watermark">
+          <img src="data:image/png;base64,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" width="46" height="46" alt="">
+          <div>
+            <span class="wmText">AXIS<br>ROBOTICS</span>
+            <span class="wmTag">The future is robotics</span>
+          </div>
+        </div>
+      </div>
+
+      <span class="scorePill" id="cardScorePill">SCORE: 0%</span>
+      <p class="verdictQuote" id="cardVerdict">&ldquo;&rdquo;</p>
+      <p class="resultId mono" id="cardResultId">VERIFIED RESULT ID: —</p>
+    </div>
+
+    <button class="primary wide" id="shareXBtn"><span class="btnIcon">𝕏</span> Share on X</button>
+    <button class="ghost wide" id="downloadBtn"><span class="btnIcon">&#8595;</span> Download card image</button>
+    <button class="ghost wide" id="copyLinkBtn"><span class="btnIcon">&#128279;</span> Copy link</button>
+    <button class="ghost wide" id="backHomeBtn">Back to home</button>
+  </section>
+
+</main>
+
+<footer>docs.axisrobotics.ai &middot; unofficial fan quiz</footer>
+
+<script>
+const QUESTIONS = [
+  {
+    tag: "IDENTITY",
+    prompt: "How does Axis Robotics describe itself?",
+    options: [
+      "A robot hardware manufacturer",
+      "The Compounding Data Engine Accelerating Physical AI",
+      "A cloud compute provider for AI labs",
+      "A robotics simulation game studio"
+    ],
+    correct: 1,
+    explanation: "Axis's own tagline is \"the Compounding Data Engine Accelerating Physical AI.\""
+  },
+  {
+    tag: "DATA SOURCES",
+    prompt: "What are the two data sources Axis unifies?",
+    options: [
+      "Synthetic text and code data",
+      "High-fidelity simulation and ego-centric human data",
+      "LiDAR scans and satellite imagery",
+      "Public video and audio datasets"
+    ],
+    correct: 1,
+    explanation: "Axis unifies the two most scalable data sources: high-fidelity simulation and ego-centric human data."
+  },
+  {
+    tag: "LIFECYCLE",
+    prompt: "What three stages does every task move through on the platform?",
+    options: [
+      "Design → Build → Ship",
+      "Collect → Clean → Publish",
+      "Pre-training → Training → Post-training",
+      "Simulate → Test → Deploy"
+    ],
+    correct: 2,
+    explanation: "Every task moves through one lifecycle: Pre-training, Training, and Post-training."
+  },
+  {
+    tag: "PRE-TRAINING",
+    prompt: "What does a contributor do during \"Pre-training\"?",
+    options: [
+      "Reviews another contributor's submitted code",
+      "Teleoperates a simulated robot arm to complete a manipulation task",
+      "Labels still images of household objects",
+      "Writes reward functions for reinforcement learning"
+    ],
+    correct: 1,
+    explanation: "In Pre-training, contributors teleoperate a simulated robot arm through tasks like picking up a mug or sorting objects, producing demonstrations that train a base policy."
+  },
+  {
+    tag: "POST-TRAINING",
+    prompt: "What happens during \"Post-training\"?",
+    options: [
+      "A trained policy attempts the task while a contributor watches and takes over when it slips",
+      "The dataset is deleted and recollected from scratch",
+      "A contributor designs a brand-new simulated environment",
+      "The robot is shipped to a physical testing facility"
+    ],
+    correct: 0,
+    explanation: "The policy attempts the task on its own; the moment it slips, the contributor takes over, fixes the mistake, and hands control back — capturing the platform's highest-value correction data."
+  },
+  {
+    tag: "TRAJECTORY",
+    prompt: "What is a \"trajectory\" on the Axis platform?",
+    options: [
+      "A contributor's payment history",
+      "A complete, timestamped recording of joint states, object poses, control actions, and task metadata",
+      "A 3D rendering of a warehouse floor plan",
+      "A leaderboard ranking of top contributors"
+    ],
+    correct: 1,
+    explanation: "Each session produces a trajectory: a complete, timestamped recording of robot joint states, object poses, control actions, and task metadata."
+  },
+  {
+    tag: "AUGMENTATION",
+    prompt: "What backend expands verified trajectories into thousands of photorealistic training samples?",
+    options: [
+      "A Unity-based rendering farm",
+      "A hand-annotation team",
+      "An IsaacSim-based augmentation backend",
+      "A crowdsourced voting system"
+    ],
+    correct: 2,
+    explanation: "Every trajectory is verified by replay in simulation, cleaned, and expanded in an IsaacSim-based augmentation backend into photorealistic, domain-randomized samples."
+  },
+  {
+    tag: "PROVENANCE",
+    prompt: "Where is each signed trajectory's unique Data ID recorded?",
+    options: [
+      "Ethereum mainnet",
+      "A private internal spreadsheet",
+      "Base",
+      "IPFS"
+    ],
+    correct: 2,
+    explanation: "Every signed trajectory is assigned a unique Data ID and recorded on Base, alongside the task and contributor IDs, forming a verifiable provenance trail."
+  },
+  {
+    tag: "CORNERSTONES",
+    prompt: "Which three \"cornerstones\" power every part of the Axis business?",
+    options: [
+      "Simulation, hardware, and mobile app",
+      "Universal Task Generation Engine, Distributed Global Workforce, Unified Processing Pipeline",
+      "Funding, team, and partnerships",
+      "Data collection, data storage, and data resale"
+    ],
+    correct: 1,
+    explanation: "The three reusable cornerstones are the Universal Task Generation Engine, the Distributed Global Workforce, and the Unified Processing Pipeline."
+  },
+  {
+    tag: "CORNERSTONES",
+    prompt: "What does the \"Distributed Global Workforce\" cornerstone provide?",
+    options: [
+      "A decentralized network that removes the physical and geographical limits of data gathering",
+      "A customer support ticketing system",
+      "A marketing team spread across time zones",
+      "A legal review board for contributor contracts"
+    ],
+    correct: 0,
+    explanation: "The Distributed Global Workforce is a decentralized network that removes the physical and geographical limits of data gathering."
+  },
+  {
+    tag: "SIMULATION",
+    prompt: "Why did Axis choose simulation as a core method? (Which of these is NOT one of the three structural reasons given?)",
+    options: [
+      "Teleoperation doesn't scale",
+      "Real-world data is scarce and risky",
+      "Video lacks ground physics (no joint torques, contact forces, or 6-DoF poses)",
+      "Simulation is cheaper than using real robots in factories"
+    ],
+    correct: 3,
+    explanation: "The three structural reasons given are: teleoperation doesn't scale, real-world data is scarce and risky, and video lacks ground physics. Cost isn't cited as one of the three reasons."
+  },
+  {
+    tag: "PRODUCTS",
+    prompt: "Which of the following is NOT one of Axis's four products in the compounding data loop?",
+    options: [
+      "Task Generation Engine",
+      "Simulation Data Collection Platform",
+      "Mobile Egocentric App",
+      "On-chain token staking vault"
+    ],
+    correct: 3,
+    explanation: "Axis's four products in the compounding data loop are the Task Generation Engine, the Simulation Data Collection Platform, the Mobile Egocentric App, and the Data-to-Model Pipeline — there's no on-chain token staking vault."
+  },
+  {
+    tag: "REFERRALS",
+    prompt: "How do referral boosts work on Axis for Kaito mindshare?",
+    options: [
+      "Every click or signup instantly multiplies your score",
+      "5 qualifying trajectories give a 1.05× boost and 10 give a 1.1× boost on your whole Kaito mindshare score",
+      "You must hold Axis tokens to receive any boost",
+      "Boosts only apply to the first week of the campaign"
+    ],
+    correct: 1,
+    explanation: "Referring 5 qualifying trajectories gives a 1.05× boost, and 10 qualifying trajectories gives a 1.1× boost, applied to your whole Kaito mindshare score."
+  },
+  {
+    tag: "POST-TRAINING",
+    prompt: "Why are post-training tasks important on Axis Robotics?",
+    options: [
+      "To increase the number of social media followers",
+      "To make robots move faster in every environment",
+      "To replace the need for human-robot interaction",
+      "To improve and refine robot performance using data collected after training"
+    ],
+    correct: 3,
+    explanation: "Post-training tasks capture correction data as a trained policy attempts a task, which is used to improve and refine robot performance."
+  },
+  {
+    tag: "AUGMENTATION",
+    prompt: "What is the purpose of photorealistic augmentation in the AXIS pipeline?",
+    options: [
+      "To make websites load faster",
+      "To expand collected data into more training samples",
+      "To reduce the number of robot tasks",
+      "To replace simulation entirely"
+    ],
+    correct: 1,
+    explanation: "Photorealistic augmentation expands verified trajectories into thousands of additional, domain-randomized training samples."
+  },
+  {
+    tag: "PROVENANCE",
+    prompt: "Why is provenance important for AXIS trajectories?",
+    options: [
+      "It makes the trajectory traceable and verifiable",
+      "It increases the robot's battery capacity",
+      "It changes the robot's physical design",
+      "It prevents users from creating tasks"
+    ],
+    correct: 0,
+    explanation: "Provenance keeps each trajectory traceable and verifiable, since it's assigned a unique Data ID recorded on Base alongside task and contributor IDs."
+  },
+  {
+    tag: "BENCHMARK",
+    prompt: "Which benchmark showed improvement from 83.9% to 88.8% with continual pretraining on Axis Dataset V1?",
+    options: [
+      "ImageNet",
+      "LIBERO-Plus",
+      "COCO",
+      "MMLU"
+    ],
+    correct: 1,
+    explanation: "Continual pretraining on Axis Dataset V1 showed improvement from 83.9% to 88.8% on the LIBERO-Plus benchmark."
+  },
+  {
+    tag: "TEAM",
+    prompt: "According to the docs, the Axis team draws researchers from which institutions?",
+    options: [
+      "Oxford, Cambridge, MIT, and Stanford",
+      "Berkeley, CMU, UCLA, and NTU",
+      "Waterloo, Toronto, McGill, and UBC",
+      "Tsinghua, Peking, Fudan, and Zhejiang"
+    ],
+    correct: 1,
+    explanation: "The docs describe the team as top AI and robotics researchers from Berkeley, CMU, UCLA, and NTU, alongside serial founders who've scaled products past 30M+ users."
+  },
+  {
+    tag: "FUNDING",
+    prompt: "Which firm led Axis Robotics' $12M seed round?",
+    options: [
+      "Andreessen Horowitz",
+      "Hack VC",
+      "Sequoia Capital",
+      "Paradigm"
+    ],
+    correct: 1,
+    explanation: "The $12M round was led by Hack VC."
+  },
+  {
+    tag: "TASK GENERATION",
+    prompt: "What does the Axis Task Generation Engine automatically help create?",
+    options: [
+      "Cryptocurrency tokens",
+      "Diverse robot-training task scenarios",
+      "Social media accounts",
+      "Physical robot hardware"
+    ],
+    correct: 1,
+    explanation: "The Axis Task Generation Engine automatically helps create diverse robot-training task scenarios."
+  }
+];
+
+const TIME_PER_QUESTION = 30; // seconds
+
+let current = 0;
+let score = 0;
+let answered = false;
+let timeLeft = TIME_PER_QUESTION;
+let timerInterval = null;
+let autoAdvanceTimeout = null;
+let twitterHandle = '';
+
+const login = document.getElementById('login');
+const handleInput = document.getElementById('handleInput');
+const loginBtn = document.getElementById('loginBtn');
+const loginError = document.getElementById('loginError');
+const handleBadge = document.getElementById('handleBadge');
+const handleBadgeText = document.getElementById('handleBadgeText');
+const intro = document.getElementById('intro');
+const progressWrap = document.getElementById('progressWrap');
+const timerRow = document.getElementById('timerRow');
+const quizCard = document.getElementById('quizCard');
+const results = document.getElementById('results');
+
+const qNum = document.getElementById('qNum');
+const fillBar = document.getElementById('fillBar');
+const scoreReadout = document.getElementById('scoreReadout').querySelector('b');
+const qTag = document.getElementById('qTag');
+const qPrompt = document.getElementById('qPrompt');
+const optionsWrap = document.getElementById('optionsWrap');
+const feedback = document.getElementById('feedback');
+const verdictText = document.getElementById('verdictText');
+const explanationText = document.getElementById('explanationText');
+const nextBtn = document.getElementById('nextBtn');
+const timerFill = document.getElementById('timerFill');
+const timerNum = document.getElementById('timerNum');
+const cardHandle = document.getElementById('cardHandle');
+const cardScore = document.getElementById('cardScore');
+const cardScorePill = document.getElementById('cardScorePill');
+const cardVerdict = document.getElementById('cardVerdict');
+const cardResultId = document.getElementById('cardResultId');
+const evalCard = document.getElementById('evalCard');
+
+document.getElementById('startBtn').addEventListener('click', startQuiz);
+nextBtn.addEventListener('click', () => {
+  clearAutoAdvance();
+  advance();
+});
+
+const adminBtn = document.getElementById('adminBtn');
+const adminNote = document.getElementById('adminNote');
+adminBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  adminNote.textContent = 'Admin access is limited to the Axis Robotics team.';
+  adminNote.classList.add('show');
+  setTimeout(() => adminNote.classList.remove('show'), 3000);
+});
+
+loginBtn.addEventListener('click', handleLogin);
+handleInput.addEventListener('keydown', (e) => {
+  if(e.key === 'Enter') handleLogin();
+});
+handleInput.addEventListener('input', () => {
+  loginError.style.display = 'none';
+});
+
+let lastResultId = '';
+
+function generateResultId(){
+  const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let id = '';
+  for(let i = 0; i < 8; i++){
+    id += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return id;
+}
+
+document.getElementById('shareXBtn').addEventListener('click', shareOnX);
+document.getElementById('downloadBtn').addEventListener('click', downloadCardImage);
+document.getElementById('copyLinkBtn').addEventListener('click', copyResultLink);
+document.getElementById('backHomeBtn').addEventListener('click', backToHome);
+
+function shareOnX(){
+  const total = QUESTIONS.length;
+  const tag = twitterHandle ? (' — @' + twitterHandle) : '';
+  const text = 'I scored ' + score + '/' + total + ' on the Axis Robotics Basics Quiz' + tag + ' 🤖⚡\n\nTry it yourself:';
+  const url = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
+  window.open(url, '_blank', 'noopener');
+}
+
+function downloadCardImage(){
+  const btn = document.getElementById('downloadBtn');
+  const originalLabel = btn.innerHTML;
+
+  function doCapture(){
+    window.html2canvas(evalCard, {
+      backgroundColor: '#04090b',
+      scale: 2
+    }).then((canvas) => {
+      const link = document.createElement('a');
+      link.download = 'axis-robotics-result-' + (lastResultId || 'card') + '.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      btn.innerHTML = originalLabel;
+    }).catch(() => {
+      btn.innerHTML = '<span class="btnIcon">&#8595;</span> Could not generate image';
+      setTimeout(() => { btn.innerHTML = originalLabel; }, 2500);
+    });
+  }
+
+  if(typeof window.html2canvas === 'function'){
+    btn.innerHTML = '<span class="btnIcon">&#8595;</span> Generating…';
+    doCapture();
+    return;
+  }
+
+  btn.innerHTML = '<span class="btnIcon">&#8595;</span> Loading…';
+  const script = document.createElement('script');
+  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  script.onload = () => {
+    btn.innerHTML = '<span class="btnIcon">&#8595;</span> Generating…';
+    doCapture();
+  };
+  script.onerror = () => {
+    btn.innerHTML = '<span class="btnIcon">&#8595;</span> Image tool unavailable';
+    setTimeout(() => { btn.innerHTML = originalLabel; }, 2500);
+  };
+  document.head.appendChild(script);
+}
+
+function copyResultLink(){
+  const btn = document.getElementById('copyLinkBtn');
+  const originalLabel = btn.innerHTML;
+  const base = window.location.href.split('?')[0].split('#')[0];
+  const params = new URLSearchParams();
+  if(twitterHandle) params.set('handle', twitterHandle);
+  params.set('score', score);
+  params.set('total', QUESTIONS.length);
+  if(lastResultId) params.set('id', lastResultId);
+  const link = base + '?' + params.toString();
+
+  const showCopied = () => {
+    btn.innerHTML = '<span class="btnIcon">&#10003;</span> Copied!';
+    setTimeout(() => { btn.innerHTML = originalLabel; }, 2000);
+  };
+
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(link).then(showCopied).catch(() => fallbackCopy(link, showCopied));
+  } else {
+    fallbackCopy(link, showCopied);
+  }
+}
+
+function fallbackCopy(text, cb){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+  cb();
+}
+
+function backToHome(){
+  results.style.display = 'none';
+  intro.style.display = 'block';
+}
+
+function handleLogin(){
+  let raw = handleInput.value.trim();
+  raw = raw.replace(/^@+/, '');
+  raw = raw.replace(/^https?:\/\/(www\.)?(twitter|x)\.com\//i, '');
+
+  const valid = /^[A-Za-z0-9_]{1,15}$/.test(raw);
+  if(!valid){
+    loginError.style.display = 'block';
+    return;
+  }
+
+  twitterHandle = raw;
+  handleBadgeText.textContent = '@' + twitterHandle;
+  handleBadge.style.display = 'flex';
+
+  login.style.display = 'none';
+  intro.style.display = 'block';
+}
+
+function startQuiz(){
+  current = 0;
+  score = 0;
+  answered = false;
+  intro.style.display = 'none';
+  results.style.display = 'none';
+  progressWrap.style.display = 'flex';
+  timerRow.style.display = 'flex';
+  quizCard.style.display = 'block';
+  renderQuestion();
+}
+
+function clearTimer(){
+  if(timerInterval){ clearInterval(timerInterval); timerInterval = null; }
+}
+function clearAutoAdvance(){
+  if(autoAdvanceTimeout){ clearTimeout(autoAdvanceTimeout); autoAdvanceTimeout = null; }
+}
+
+function renderQuestion(){
+  answered = false;
+  clearTimer();
+  clearAutoAdvance();
+  timeLeft = TIME_PER_QUESTION;
+
+  const q = QUESTIONS[current];
+  qNum.textContent = String(current + 1).padStart(2, '0');
+  fillBar.style.width = ((current) / QUESTIONS.length * 100) + '%';
+  scoreReadout.textContent = score;
+  qTag.textContent = 'SECTION — ' + q.tag;
+  qPrompt.textContent = q.prompt;
+
+  optionsWrap.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    btn.innerHTML = '<span class="k mono">' + letters[i] + '</span><span>' + opt + '</span>';
+    btn.addEventListener('click', () => selectAnswer(i));
+    optionsWrap.appendChild(btn);
+  });
+
+  feedback.style.display = 'none';
+  feedback.className = '';
+  nextBtn.disabled = true;
+  nextBtn.textContent = (current === QUESTIONS.length - 1) ? 'See results' : 'Next question';
+
+  updateTimerDisplay();
+  timerInterval = setInterval(tickTimer, 1000);
+}
+
+function updateTimerDisplay(){
+  timerNum.textContent = timeLeft + 's';
+  const pct = (timeLeft / TIME_PER_QUESTION) * 100;
+  timerFill.style.width = pct + '%';
+  timerFill.classList.remove('warn', 'crit');
+  if(timeLeft <= 5){
+    timerFill.classList.add('crit');
+  } else if(timeLeft <= 10){
+    timerFill.classList.add('warn');
+  }
+}
+
+function tickTimer(){
+  timeLeft--;
+  if(timeLeft <= 0){
+    timeLeft = 0;
+    updateTimerDisplay();
+    clearTimer();
+    handleTimeout();
+    return;
+  }
+  updateTimerDisplay();
+}
+
+function handleTimeout(){
+  if(answered) return;
+  answered = true;
+  const q = QUESTIONS[current];
+  const buttons = optionsWrap.querySelectorAll('.opt');
+  buttons.forEach((b, idx) => {
+    b.disabled = true;
+    if(idx === q.correct){
+      b.classList.add('correct');
+    } else {
+      b.classList.add('dim');
+    }
+  });
+
+  feedback.style.display = 'block';
+  feedback.className = 'bad';
+  verdictText.textContent = "Time's up";
+  explanationText.textContent = "No answer was selected in time. " + q.explanation;
+
+  nextBtn.disabled = false;
+  autoAdvanceTimeout = setTimeout(() => { advance(); }, 2200);
+}
+
+function selectAnswer(i){
+  if(answered) return;
+  answered = true;
+  clearTimer();
+
+  const q = QUESTIONS[current];
+  const buttons = optionsWrap.querySelectorAll('.opt');
+  buttons.forEach((b, idx) => {
+    b.disabled = true;
+    if(idx === q.correct){
+      b.classList.add('correct');
+    } else if(idx === i){
+      b.classList.add('incorrect');
+    } else {
+      b.classList.add('dim');
+    }
+  });
+
+  const isCorrect = (i === q.correct);
+  if(isCorrect) score++;
+
+  feedback.style.display = 'block';
+  feedback.className = isCorrect ? 'good' : 'bad';
+  verdictText.textContent = isCorrect ? 'Correct' : 'Incorrect';
+  explanationText.textContent = q.explanation;
+
+  scoreReadout.textContent = score;
+  nextBtn.disabled = false;
+}
+
+function advance(){
+  clearTimer();
+  clearAutoAdvance();
+  current++;
+  if(current >= QUESTIONS.length){
+    showResults();
+  } else {
+    renderQuestion();
+  }
+}
+
+function showResults(){
+  clearTimer();
+  clearAutoAdvance();
+  quizCard.style.display = 'none';
+  progressWrap.style.display = 'none';
+  timerRow.style.display = 'none';
+  results.style.display = 'block';
+
+  const total = QUESTIONS.length;
+  const pct = Math.round((score / total) * 100);
+
+  lastResultId = generateResultId();
+
+  cardHandle.textContent = twitterHandle ? ('@' + twitterHandle) : '@guest';
+  cardScore.textContent = score;
+  cardScorePill.textContent = 'SCORE: ' + pct + '%';
+  cardResultId.textContent = 'VERIFIED RESULT ID: ' + lastResultId;
+
+  let title;
+  if(pct === 100) title = 'Axis Robotics Expert';
+  else if(pct >= 80) title = 'Axis Robotics Specialist';
+  else if(pct >= 50) title = 'Axis Robotics Contributor';
+  else title = 'Axis Robotics Rookie';
+  cardVerdict.innerHTML = '&ldquo;' + title + '&rdquo;';
+}
+</script>
+
+</body>
+</html>
